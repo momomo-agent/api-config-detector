@@ -449,41 +449,52 @@
 
       const modelsToTry = testModel ? [testModel] : config.defaultModels
       
+      // 智能处理 baseUrl：如果已经带 /v1，就不重复加
+      const hasV1 = baseUrl.endsWith('/v1') || baseUrl.includes('/v1/')
+      let pathsToTry = [config.path]
+      
+      // 如果 baseUrl 不带 /v1，且路径是 /v1/xxx，也尝试不带 /v1 的版本
+      if (!hasV1 && config.path.startsWith('/v1/')) {
+        pathsToTry.push(config.path.replace('/v1/', '/'))
+      }
+      
       let lastError = null
       for (const model of modelsToTry) {
-        try {
-          const body = config.bodyTemplate(model)
-          
-          // 调用服务端 API 避免 CORS
-          const response = await fetch('/api/test', {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({
-              baseUrl,
-              apiKey,
-              api: config.api,
-              path: config.path,
-              headers,
-              body
+        for (const path of pathsToTry) {
+          try {
+            const body = config.bodyTemplate(model)
+            
+            const response = await fetch('/api/test', {
+              method: 'POST',
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({
+                baseUrl,
+                apiKey,
+                api: config.api,
+                path,
+                headers,
+                body
+              })
             })
-          })
 
-          const result = await response.json()
-          
-          if (result.success) {
-            return {
-              success: true,
-              statusCode: result.statusCode,
-              api: config.api,
-              name: config.name,
-              authHeader: config.authHeader,
-              suggestedModels: config.suggestedModels,
-              testedModel: model
+            const result = await response.json()
+            
+            if (result.success) {
+              return {
+                success: true,
+                statusCode: result.statusCode,
+                api: config.api,
+                name: config.name,
+                authHeader: config.authHeader,
+                suggestedModels: config.suggestedModels,
+                testedModel: model,
+                testedPath: path
+              }
             }
+            lastError = result.error || `${result.statusCode}`
+          } catch (err) {
+            lastError = err.message
           }
-          lastError = result.error || `${result.statusCode}`
-        } catch (err) {
-          lastError = err.message
         }
       }
       
