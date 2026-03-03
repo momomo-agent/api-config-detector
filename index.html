@@ -463,27 +463,21 @@
         for (const path of pathsToTry) {
           try {
             const body = config.bodyTemplate(model)
+            const cleanBaseUrl = baseUrl.replace(/\/+$/, '')
+            const cleanPath = path.startsWith('/') ? path : `/${path}`
+            const fullUrl = `${cleanBaseUrl}${cleanPath}`
             
-            // 通过 Edge Function 转发请求
-            const response = await fetch('/api/test', {
+            // 客户端直接请求（避免后端超时）
+            const response = await fetch(fullUrl, {
               method: 'POST',
-              headers: { 'content-type': 'application/json' },
-              body: JSON.stringify({
-                baseUrl,
-                apiKey,
-                api: config.api,
-                path,
-                headers,
-                body
-              })
+              headers: headers,
+              body: JSON.stringify(body)
             })
-
-            const result = await response.json()
             
-            if (result.success) {
+            if (response.ok) {
               return {
                 success: true,
-                statusCode: result.statusCode,
+                statusCode: response.status,
                 api: config.api,
                 name: config.name,
                 authHeader: config.authHeader,
@@ -492,7 +486,7 @@
                 testedPath: path
               }
             }
-            lastError = result.error || `${result.statusCode}`
+            lastError = `${response.status}`
           } catch (err) {
             lastError = err.message
           }
