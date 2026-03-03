@@ -194,6 +194,15 @@
           required
         >
       </div>
+
+      <div class="input-group">
+        <label for="testModel">Test Model (可选，留空自动尝试常见模型)</label>
+        <input 
+          type="text" 
+          id="testModel" 
+          placeholder="claude-3-5-sonnet-20241022 或 gpt-4"
+        >
+      </div>
       
       <button type="submit" id="detectBtn">开始检测</button>
     </form>
@@ -232,11 +241,12 @@
           'anthropic-version': '2023-06-01',
           'content-type': 'application/json'
         }),
-        body: {
-          model: 'claude-3-5-sonnet-20241022',
+        bodyTemplate: (model) => ({
+          model: model || 'claude-3-5-sonnet-20241022',
           max_tokens: 10,
           messages: [{ role: 'user', content: 'hi' }]
-        },
+        }),
+        defaultModels: ['claude-3-5-sonnet-20241022', 'claude-opus-4-6', 'claude-sonnet-4-6'],
         suggestedModels: [
           {
             id: 'claude-opus-4-6',
@@ -267,11 +277,12 @@
           'authorization': `Bearer ${key}`,
           'content-type': 'application/json'
         }),
-        body: {
-          model: 'gpt-4',
+        bodyTemplate: (model) => ({
+          model: model || 'gpt-4',
           max_tokens: 10,
           messages: [{ role: 'user', content: 'hi' }]
-        },
+        }),
+        defaultModels: ['gpt-4', 'gpt-5.2', 'gpt-4o'],
         authHeader: true,
         suggestedModels: [
           {
@@ -302,11 +313,12 @@
         headers: () => ({
           'content-type': 'application/json'
         }),
-        body: {
-          model: 'gpt-4',
+        bodyTemplate: (model) => ({
+          model: model || 'gpt-4',
           max_tokens: 10,
           messages: [{ role: 'user', content: 'hi' }]
-        },
+        }),
+        defaultModels: ['gpt-4', 'gpt-5.2'],
         authHeader: false,
         suggestedModels: [
           {
@@ -329,12 +341,13 @@
           'authorization': `Bearer ${key}`,
           'content-type': 'application/json'
         }),
-        body: {
-          model: 'gpt-4',
+        bodyTemplate: (model) => ({
+          model: model || 'gpt-4',
           max_tokens: 10,
           stream: false,
           messages: [{ role: 'user', content: 'hi' }]
-        },
+        }),
+        defaultModels: ['gpt-5.1-codex', 'gpt-4'],
         authHeader: true,
         suggestedModels: [
           {
@@ -350,29 +363,49 @@
       }
     ]
 
-    async function testConfig(baseUrl, apiKey, config) {
+    async function testConfig(baseUrl, apiKey, config, testModel) {
       try {
         const url = new URL(config.path, baseUrl)
         const headers = typeof config.headers === 'function' 
           ? config.headers(apiKey) 
           : config.headers
 
-        const response = await fetch(url.toString(), {
-          method: config.method,
-          headers: headers,
-          body: JSON.stringify(config.body)
-        })
+        // 如果用户指定了 model 就用用户的，否则尝试默认列表
+        const modelsToTry = testModel ? [testModel] : config.defaultModels
+        
+        let lastError = null
+        for (const model of modelsToTry) {
+          try {
+            const body = config.bodyTemplate(model)
+            const response = await fetch(url.toString(), {
+              method: config.method,
+              headers: headers,
+              body: JSON.stringify(body)
+            })
 
-        const text = await response.text()
+            if (response.ok) {
+              return {
+                success: true,
+                statusCode: response.status,
+                api: config.api,
+                name: config.name,
+                authHeader: config.authHeader,
+                suggestedModels: config.suggestedModels,
+                testedModel: model
+              }
+            }
+            lastError = `${response.status}`
+          } catch (err) {
+            lastError = err.message
+          }
+        }
         
         return {
-          success: response.ok,
-          statusCode: response.status,
+          success: false,
           api: config.api,
           name: config.name,
           authHeader: config.authHeader,
-          suggestedModels: config.suggestedModels,
-          response: text.slice(0, 100)
+          error: lastError
         }
       } catch (error) {
         return {
@@ -391,6 +424,7 @@
       const providerName = document.getElementById('providerName').value.trim()
       const baseUrl = document.getElementById('baseUrl').value.trim()
       const apiKey = document.getElementById('apiKey').value.trim()
+      const testModel = document.getElementById('testModel').value.trim()
       
       const results = document.getElementById('results')
       const loading = document.getElementById('loading')
@@ -408,7 +442,7 @@
       const allResults = []
       
       for (const config of TEST_CONFIGS) {
-        const result = await testConfig(baseUrl, apiKey, config)
+        const result = await testConfig(baseUrl, apiKey, config, testModel)
         allResults.push(result)
         
         const statusClass = result.success ? 'success' : 'fail'
