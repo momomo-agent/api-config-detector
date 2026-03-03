@@ -464,8 +464,8 @@
           try {
             const body = config.bodyTemplate(model)
             
-            // 通过后端 Edge Function 转发
-            const response = await fetch('/api/test', {
+            // 通过 Cloudflare Workers 转发（无超时限制）
+            const response = await fetch('https://api-config-detector.molttalk.workers.dev/api/test', {
               method: 'POST',
               headers: { 'content-type': 'application/json' },
               body: JSON.stringify({
