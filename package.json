@@ -1,0 +1,9 @@
+{
+  "name": "api-config-detector",
+  "version": "1.0.0",
+  "description": "OpenClaw API Config Detector",
+  "scripts": {
+    "dev": "python3 -m http.server 3000",
+    "build": "echo 'Static site, no build needed'"
+  }
+}
