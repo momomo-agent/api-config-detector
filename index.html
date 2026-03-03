@@ -463,21 +463,27 @@
         for (const path of pathsToTry) {
           try {
             const body = config.bodyTemplate(model)
-            const cleanBaseUrl = baseUrl.replace(/\/+$/, '')
-            const cleanPath = path.startsWith('/') ? path : `/${path}`
-            const fullUrl = `${cleanBaseUrl}${cleanPath}`
             
-            // 直接从客户端请求，避免 Vercel 超时
-            const response = await fetch(fullUrl, {
+            // 通过 Edge Function 转发请求
+            const response = await fetch('/api/test', {
               method: 'POST',
-              headers: headers,
-              body: JSON.stringify(body)
+              headers: { 'content-type': 'application/json' },
+              body: JSON.stringify({
+                baseUrl,
+                apiKey,
+                api: config.api,
+                path,
+                headers,
+                body
+              })
             })
+
+            const result = await response.json()
             
-            if (response.ok) {
+            if (result.success) {
               return {
                 success: true,
-                statusCode: response.status,
+                statusCode: result.statusCode,
                 api: config.api,
                 name: config.name,
                 authHeader: config.authHeader,
@@ -486,7 +492,7 @@
                 testedPath: path
               }
             }
-            lastError = `${response.status}`
+            lastError = result.error || `${result.statusCode}`
           } catch (err) {
             lastError = err.message
           }
