@@ -364,57 +364,56 @@
     ]
 
     async function testConfig(baseUrl, apiKey, config, testModel) {
-      try {
-        const url = new URL(config.path, baseUrl)
-        const headers = typeof config.headers === 'function' 
-          ? config.headers(apiKey) 
-          : config.headers
+      const headers = typeof config.headers === 'function' 
+        ? config.headers(apiKey) 
+        : config.headers
 
-        // 如果用户指定了 model 就用用户的，否则尝试默认列表
-        const modelsToTry = testModel ? [testModel] : config.defaultModels
-        
-        let lastError = null
-        for (const model of modelsToTry) {
-          try {
-            const body = config.bodyTemplate(model)
-            const response = await fetch(url.toString(), {
-              method: config.method,
-              headers: headers,
-              body: JSON.stringify(body)
+      const modelsToTry = testModel ? [testModel] : config.defaultModels
+      
+      let lastError = null
+      for (const model of modelsToTry) {
+        try {
+          const body = config.bodyTemplate(model)
+          
+          // 调用服务端 API 避免 CORS
+          const response = await fetch('/api/test', {
+            method: 'POST',
+            headers: { 'content-type': 'application/json' },
+            body: JSON.stringify({
+              baseUrl,
+              apiKey,
+              api: config.api,
+              path: config.path,
+              headers,
+              body
             })
+          })
 
-            if (response.ok) {
-              return {
-                success: true,
-                statusCode: response.status,
-                api: config.api,
-                name: config.name,
-                authHeader: config.authHeader,
-                suggestedModels: config.suggestedModels,
-                testedModel: model
-              }
+          const result = await response.json()
+          
+          if (result.success) {
+            return {
+              success: true,
+              statusCode: result.statusCode,
+              api: config.api,
+              name: config.name,
+              authHeader: config.authHeader,
+              suggestedModels: config.suggestedModels,
+              testedModel: model
             }
-            lastError = `${response.status}`
-          } catch (err) {
-            lastError = err.message
           }
+          lastError = result.error || `${result.statusCode}`
+        } catch (err) {
+          lastError = err.message
         }
-        
-        return {
-          success: false,
-          api: config.api,
-          name: config.name,
-          authHeader: config.authHeader,
-          error: lastError
-        }
-      } catch (error) {
-        return {
-          success: false,
-          api: config.api,
-          name: config.name,
-          authHeader: config.authHeader,
-          error: error.message
-        }
+      }
+      
+      return {
+        success: false,
+        api: config.api,
+        name: config.name,
+        authHeader: config.authHeader,
+        error: lastError
       }
     }
 
