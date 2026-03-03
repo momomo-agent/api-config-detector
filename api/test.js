@@ -1,3 +1,7 @@
+export const config = {
+  maxDuration: 30, // 30秒超时
+}
+
 export default async function handler(req, res) {
   // 允许 CORS
   res.setHeader('Access-Control-Allow-Origin', '*')
@@ -15,32 +19,34 @@ export default async function handler(req, res) {
   const { baseUrl, apiKey, api, path, headers, body } = req.body
 
   try {
-    // 确保 baseUrl 末尾没有斜杠
     const cleanBaseUrl = baseUrl.replace(/\/+$/, '')
-    // 确保 path 开头有斜杠
     const cleanPath = path.startsWith('/') ? path : `/${path}`
     const fullUrl = `${cleanBaseUrl}${cleanPath}`
     
-    console.log('Testing:', fullUrl, 'with model:', body.model)
+    console.log('Testing:', fullUrl)
+    
+    const controller = new AbortController()
+    const timeoutId = setTimeout(() => controller.abort(), 25000) // 25秒超时
     
     const response = await fetch(fullUrl, {
       method: 'POST',
       headers: headers,
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
+      signal: controller.signal
     })
-
+    
+    clearTimeout(timeoutId)
     const text = await response.text()
     
-    console.log('Response:', response.status, text.slice(0, 100))
+    console.log('Response:', response.status)
     
     res.status(200).json({
       success: response.ok,
       statusCode: response.status,
-      body: text.slice(0, 200),
-      url: fullUrl
+      body: text.slice(0, 200)
     })
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error:', error.message)
     res.status(200).json({
       success: false,
       error: error.message
