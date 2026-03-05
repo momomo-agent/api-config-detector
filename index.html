@@ -11,7 +11,8 @@
       background: #0a0a0a;
       color: #e5e5e5;
       min-height: 100vh;
-      padding: 32px;
+      padding: 0;
+      overflow: hidden;
     }
     h1 {
       font-size: 20px;
@@ -27,16 +28,17 @@
     .layout {
       display: grid;
       grid-template-columns: 300px 1fr 1fr;
-      gap: 24px;
+      gap: 0;
       max-width: 100%;
       margin: 0;
+      height: calc(100vh - 48px);
     }
     .panel {
-      background: #141414;
-      border: 1px solid #262626;
-      border-radius: 12px;
-      padding: 20px;
+      border-right: 1px solid #262626;
+      padding: 16px 20px;
+      overflow-y: auto;
     }
+    .panel:last-child { border-right: none; }
     .panel-title {
       font-size: 13px;
       font-weight: 600;
@@ -210,9 +212,9 @@
   </style>
 </head>
 <body>
-  <div style="max-width: 100%; margin: 0 auto;">
+  <div style="padding: 12px 20px; border-bottom: 1px solid #262626; display: flex; align-items: baseline; gap: 12px;">
     <h1>OpenClaw API Detector</h1>
-    <p class="subtitle">输入 Base URL 和 API Key，自动检测协议类型，生成 OpenClaw 配置</p>
+    <p class="subtitle" style="margin-bottom:0">输入 Base URL 和 API Key，自动检测协议类型，生成 OpenClaw 配置</p>
   </div>
 
   <div class="layout">
