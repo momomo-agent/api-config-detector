@@ -463,30 +463,34 @@
       renderInitialItems()
       document.getElementById('configPanel').innerHTML = '<div class="empty-state">检测中...</div>'
 
-      let firstSuccessIdx = -1
-
-      for (let i = 0; i < TEST_CONFIGS.length; i++) {
-        const config = TEST_CONFIGS[i]
+      // Set all to testing
+      TEST_CONFIGS.forEach((_, i) => {
         const el = document.getElementById(`test-${i}`)
         el.className = 'test-item testing'
         el.querySelector('.status').innerHTML = '<span class="spinner-inline"></span> testing'
+      })
 
-        const result = await testOne(baseUrl, apiKey, config, testModel)
-        allTestResults[i] = { ...result, config }
+      // Fire all concurrently
+      const promises = TEST_CONFIGS.map((config, i) =>
+        testOne(baseUrl, apiKey, config, testModel).then(result => {
+          allTestResults[i] = { ...result, config }
+          const el = document.getElementById(`test-${i}`)
+          if (result.success) {
+            el.className = 'test-item success'
+            el.querySelector('.status').textContent = `✓ ${result.statusCode}`
+            el.onclick = () => selectResult(i)
+          } else {
+            el.className = 'test-item fail'
+            const errText = result.error || `${result.statusCode || 'err'}`
+            el.querySelector('.status').textContent = `✗ ${errText.slice(0, 30)}`
+          }
+        })
+      )
 
-        if (result.success) {
-          el.className = 'test-item success'
-          el.querySelector('.status').textContent = `✓ ${result.statusCode}`
-          el.onclick = () => selectResult(i)
-          if (firstSuccessIdx === -1) firstSuccessIdx = i
-        } else {
-          el.className = 'test-item fail'
-          const errText = result.error || `${result.statusCode || 'err'}`
-          el.querySelector('.status').textContent = `✗ ${errText.slice(0, 30)}`
-        }
-      }
+      await Promise.all(promises)
 
       // Auto-select first success
+      const firstSuccessIdx = allTestResults.findIndex(r => r && r.success)
       if (firstSuccessIdx !== -1) {
         selectResult(firstSuccessIdx)
       } else {
