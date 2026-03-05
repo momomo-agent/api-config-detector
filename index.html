@@ -311,12 +311,16 @@
       const testModel = document.getElementById('testModel').value.trim()
       const providerConfig = { baseUrl, apiKey, api: c.api }
       if (c.authHeader === false) providerConfig.authHeader = false
-      if (c.suggestedModels?.length) providerConfig.models = c.suggestedModels
-      const firstModelId = c.suggestedModels?.[0]?.id || testModel
-      const primaryModel = firstModelId ? `${providerName}/${firstModelId}` : null
+      // models is required by OpenClaw schema, use testModel as minimal entry
+      if (testModel) {
+        providerConfig.models = [{ id: testModel, name: testModel }]
+      } else {
+        providerConfig.models = [{ id: 'REPLACE_WITH_MODEL_ID', name: 'REPLACE_WITH_MODEL_NAME' }]
+      }
+      const primaryModel = testModel ? `${providerName}/${testModel}` : null
       const finalConfig = { models: { providers: { [providerName]: providerConfig } } }
       if (primaryModel) {
-        finalConfig.agents = { defaults: { model: { primary: primaryModel } } }
+        finalConfig.agents = { defaults: { model: primaryModel } }
       }
       const json = JSON.stringify(finalConfig, null, 2)
       panel.innerHTML = `
