@@ -28,8 +28,8 @@
       display: grid;
       grid-template-columns: 300px 1fr 1fr;
       gap: 24px;
-      max-width: 1200px;
-      margin: 0 auto;
+      max-width: 100%;
+      margin: 0;
     }
     .panel {
       background: #141414;
@@ -203,7 +203,7 @@
   </style>
 </head>
 <body>
-  <div style="max-width: 1200px; margin: 0 auto;">
+  <div style="max-width: 100%; margin: 0 auto;">
     <h1>OpenClaw API Detector</h1>
     <p class="subtitle">输入 Base URL 和 API Key，自动检测协议类型，生成 OpenClaw 配置</p>
   </div>
@@ -214,7 +214,7 @@
       <div class="panel-title">输入</div>
       <form id="detectForm">
         <div class="input-group">
-          <label>Provider Name</label>
+          <label>Provider Name（自定义名称，如供应商名字）</label>
           <input type="text" id="providerName" placeholder="my-provider" required>
         </div>
         <div class="input-group">
