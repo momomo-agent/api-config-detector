@@ -27,7 +27,7 @@
     }
     .layout {
       display: grid;
-      grid-template-columns: 300px 1fr 1fr;
+      grid-template-columns: 1fr 1fr;
       gap: 0;
       max-width: 100%;
       margin: 0;
@@ -206,7 +206,7 @@
     }
     .summary strong { color: #fafafa; }
 
-    @media (max-width: 900px) {
+    @media (max-width: 700px) {
       .layout {
         grid-template-columns: 1fr;
       }
@@ -220,7 +220,7 @@
   </div>
 
   <div class="layout">
-    <!-- Column 1: Input -->
+    <!-- Column 1: Input + Results -->
     <div class="panel">
       <div class="panel-title">输入</div>
       <form id="detectForm">
@@ -242,13 +242,11 @@
         </div>
         <button type="submit" id="detectBtn">开始检测</button>
       </form>
-    </div>
-
-    <!-- Column 2: Real-time test results -->
-    <div class="panel">
-      <div class="panel-title">检测结果</div>
-      <div id="testResults">
-        <div class="empty-state">输入配置后点击开始检测</div>
+      <div style="margin-top:16px;flex:1;display:flex;flex-direction:column;overflow-y:auto">
+        <div class="panel-title">检测结果</div>
+        <div id="testResults" style="flex:1;overflow-y:auto">
+          <div class="empty-state">输入配置后点击开始检测</div>
+        </div>
       </div>
     </div>
 
