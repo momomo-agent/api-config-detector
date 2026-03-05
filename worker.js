@@ -36,9 +36,23 @@ async function handleProxy(request) {
   }
 
   try {
-    const { url, method = 'GET', headers = {}, body, mode = 'raw' } = await request.json()
+    let targetUrl, method = 'GET', headers = {}, body, mode = 'raw'
     
-    if (!url) {
+    // 支持两种调用方式：GET ?url=...&mode=... 或 POST JSON
+    if (request.method === 'GET') {
+      const url = new URL(request.url)
+      targetUrl = url.searchParams.get('url')
+      mode = url.searchParams.get('mode') || 'raw'
+    } else {
+      const json = await request.json()
+      targetUrl = json.url
+      method = json.method || 'GET'
+      headers = json.headers || {}
+      body = json.body
+      mode = json.mode || 'raw'
+    }
+    
+    if (!targetUrl) {
       return new Response(JSON.stringify({ error: 'Missing url parameter' }), {
         status: 400,
         headers: { ...corsHeaders, 'content-type': 'application/json' }
@@ -47,30 +61,23 @@ async function handleProxy(request) {
     
     const fetchOptions = {
       method,
-      headers
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36',
+        ...headers
+      }
     }
     
     if (body && method !== 'GET' && method !== 'HEAD') {
       fetchOptions.body = typeof body === 'string' ? body : JSON.stringify(body)
     }
     
-    const response = await fetch(url, fetchOptions)
+    const response = await fetch(targetUrl, fetchOptions)
     const text = await response.text()
     
-    // LLM 友好模式
+    // LLM 友好模式：提取 HTML 正文
     if (mode === 'llm') {
-      let parsed = text
-      try {
-        parsed = JSON.parse(text)
-      } catch {}
-      
-      return new Response(JSON.stringify({
-        success: response.ok,
-        status: response.status,
-        contentType: response.headers.get('content-type'),
-        data: parsed,
-        summary: `${method} ${url} → ${response.status} ${response.statusText}`
-      }), {
+      const extracted = extractContent(text, targetUrl)
+      return new Response(JSON.stringify(extracted, null, 2), {
         status: 200,
         headers: { ...corsHeaders, 'content-type': 'application/json' }
       })
@@ -95,6 +102,53 @@ async function handleProxy(request) {
       status: 200,
       headers: { ...corsHeaders, 'content-type': 'application/json' }
     })
+  }
+}
+
+function extractContent(html, url) {
+  try {
+    const titleMatch = html.match(/<title[^>]*>(.*?)<\/title>/is)
+    const title = titleMatch ? titleMatch[1].trim() : ''
+    
+    const descMatch = html.match(/<meta[^>]*name=["']description["'][^>]*content=["']([^"']*)["']/i)
+    const description = descMatch ? descMatch[1] : ''
+    
+    let cleaned = html
+      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
+      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
+      .replace(/<!--[\s\S]*?-->/g, '')
+    
+    const bodyMatch = cleaned.match(/<body[^>]*>([\s\S]*)<\/body>/i)
+    let bodyText = bodyMatch ? bodyMatch[1] : cleaned
+    
+    bodyText = bodyText
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&nbsp;/g, ' ')
+      .replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<')
+      .replace(/&gt;/g, '>')
+      .replace(/&quot;/g, '"')
+      .replace(/\s+/g, ' ')
+      .trim()
+    
+    const maxLen = 8000
+    if (bodyText.length > maxLen) {
+      bodyText = bodyText.substring(0, maxLen) + '...'
+    }
+    
+    return {
+      success: true,
+      url,
+      title,
+      description,
+      content: bodyText,
+      length: bodyText.length
+    }
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message
+    }
   }
 }
 

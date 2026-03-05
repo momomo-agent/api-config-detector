@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "python3 -m http.server 3000",
-    "build": "echo 'Static site with Edge Functions'"
+    "build": "mkdir -p public && cp index.html public/"
   },
   "engines": {
-    "node": "18.x"
+    "node": "24.x"
   }
 }
