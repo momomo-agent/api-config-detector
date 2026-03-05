@@ -313,9 +313,9 @@
       if (c.authHeader === false) providerConfig.authHeader = false
       // models is required by OpenClaw schema, use testModel as minimal entry
       if (testModel) {
-        providerConfig.models = [{ id: testModel, name: testModel }]
+        providerConfig.models = [{ id: testModel, name: testModel, input: ['text', 'image'] }]
       } else {
-        providerConfig.models = [{ id: 'REPLACE_WITH_MODEL_ID', name: 'REPLACE_WITH_MODEL_NAME' }]
+        providerConfig.models = [{ id: 'REPLACE_WITH_MODEL_ID', name: 'REPLACE_WITH_MODEL_NAME', input: ['text', 'image'] }]
       }
       const primaryModel = testModel ? `${providerName}/${testModel}` : null
       const finalConfig = { models: { providers: { [providerName]: providerConfig } } }
