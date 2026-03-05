@@ -37,6 +37,8 @@
       border-right: 1px solid #262626;
       padding: 16px 20px;
       overflow-y: auto;
+      display: flex;
+      flex-direction: column;
     }
     .panel:last-child { border-right: none; }
     .panel-title {
@@ -157,7 +159,7 @@
       line-height: 1.6;
       color: #d4d4d4;
       overflow: auto;
-      max-height: 500px;
+      flex: 1;
       position: relative;
     }
     .config-output pre { margin: 0; white-space: pre-wrap; }
@@ -253,7 +255,7 @@
     <!-- Column 3: Final config -->
     <div class="panel">
       <div class="panel-title">生成配置</div>
-      <div id="configPanel">
+      <div id="configPanel" style="display:flex;flex-direction:column;height:100%">>
         <div class="empty-state">检测通过后自动生成</div>
       </div>
     </div>
