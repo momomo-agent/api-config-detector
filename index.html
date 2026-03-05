@@ -3,35 +3,34 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>OpenClaw API Config Detector</title>
+  <title>OpenClaw Config — 30 秒配置你的 AI</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🦞</text></svg>">
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
       background: #0a0a0a;
       color: #e5e5e5;
-      min-height: 100vh;
-      padding: 0;
+      height: 100vh;
       overflow: hidden;
+      display: flex;
+      flex-direction: column;
     }
-    h1 {
-      font-size: 20px;
-      font-weight: 600;
-      color: #fafafa;
-      margin-bottom: 4px;
+    .header {
+      padding: 10px 20px;
+      border-bottom: 1px solid #262626;
+      display: flex;
+      align-items: baseline;
+      gap: 12px;
+      flex-shrink: 0;
     }
-    .subtitle {
-      color: #737373;
-      font-size: 13px;
-      margin-bottom: 24px;
-    }
+    h1 { font-size: 18px; font-weight: 600; color: #fafafa; }
+    .subtitle { color: #525252; font-size: 12px; }
     .layout {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 0;
-      max-width: 100%;
-      margin: 0;
-      height: calc(100vh - 48px);
+      flex: 1;
+      overflow: hidden;
     }
     .panel {
       border-right: 1px solid #262626;
@@ -42,190 +41,130 @@
     }
     .panel:last-child { border-right: none; }
     .panel-title {
-      font-size: 13px;
+      font-size: 11px;
       font-weight: 600;
-      color: #a3a3a3;
+      color: #525252;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 16px;
+      letter-spacing: 0.08em;
+      margin-bottom: 12px;
+      flex-shrink: 0;
     }
-    .input-group { margin-bottom: 14px; }
+    .input-group { margin-bottom: 12px; }
     label {
       display: block;
-      margin-bottom: 6px;
+      margin-bottom: 4px;
       font-size: 12px;
-      color: #a3a3a3;
-      font-weight: 500;
+      color: #737373;
     }
     input {
       width: 100%;
-      padding: 8px 12px;
+      padding: 7px 10px;
       background: #0a0a0a;
       border: 1px solid #262626;
-      border-radius: 6px;
+      border-radius: 4px;
       color: #fafafa;
       font-size: 13px;
       font-family: 'SF Mono', 'Monaco', monospace;
-      transition: border-color 0.15s;
     }
-    input:focus {
-      outline: none;
-      border-color: #525252;
-    }
-    input::placeholder { color: #404040; }
+    input:focus { outline: none; border-color: #525252; }
+    input::placeholder { color: #333; }
     button#detectBtn {
       width: 100%;
-      padding: 10px;
+      padding: 9px;
       background: #fafafa;
       color: #0a0a0a;
       border: none;
-      border-radius: 6px;
+      border-radius: 4px;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
-      transition: opacity 0.15s;
-      margin-top: 4px;
+      margin-top: 2px;
     }
-    button#detectBtn:hover:not(:disabled) { opacity: 0.85; }
-    button#detectBtn:disabled { opacity: 0.3; cursor: not-allowed; }
+    button#detectBtn:hover { opacity: 0.85; }
 
-    /* Test results */
     .test-item {
-      padding: 10px 12px;
-      border-radius: 6px;
-      margin-bottom: 6px;
+      padding: 8px 10px;
+      border-radius: 4px;
+      margin-bottom: 4px;
       font-size: 12px;
       display: flex;
       justify-content: space-between;
       align-items: center;
       background: #0a0a0a;
-      border: 1px solid #262626;
-      transition: border-color 0.2s, background 0.2s;
+      border: 1px solid #1a1a1a;
+      transition: all 0.15s;
       cursor: default;
     }
-    .test-item.success { cursor: pointer; }
-    .test-item.testing {
-      border-color: #404040;
-      background: #1a1a1a;
-    }
-    .test-item.success {
-      border-color: #166534;
-      background: rgba(22, 101, 52, 0.1);
-    }
-    .test-item.success.selected {
-      border-color: #22c55e;
-      background: rgba(22, 101, 52, 0.2);
-      box-shadow: 0 0 0 1px #22c55e;
-    }
-    .test-item.fail {
-      border-color: #7f1d1d;
-      background: rgba(127, 29, 29, 0.05);
-    }
-    .test-item .name {
-      color: #d4d4d4;
-      font-weight: 500;
-    }
-    .test-item .status {
-      font-family: 'SF Mono', monospace;
-      font-size: 11px;
-    }
+    .test-item.success { cursor: pointer; border-color: #14532d; background: rgba(22,101,52,0.06); }
+    .test-item.success:hover { background: rgba(22,101,52,0.12); }
+    .test-item.success.selected { border-color: #22c55e; background: rgba(22,101,52,0.15); }
+    .test-item.testing { border-color: #262626; background: #111; }
+    .test-item.fail { border-color: #1a1a1a; opacity: 0.5; }
+    .test-item .name { color: #d4d4d4; font-weight: 500; }
+    .test-item .status { font-family: 'SF Mono', monospace; font-size: 11px; white-space: nowrap; }
     .test-item.success .status { color: #4ade80; }
-    .test-item.fail .status { color: #737373; }
-    .test-item.testing .status { color: #a3a3a3; }
+    .test-item.fail .status { color: #525252; }
+    .test-item.testing .status { color: #737373; }
+    .test-item.cancelled .status { color: #404040; }
+    .test-item.cancelled { opacity: 0.3; }
 
     .spinner-inline {
-      display: inline-block;
-      width: 12px;
-      height: 12px;
-      border: 2px solid #404040;
-      border-top: 2px solid #a3a3a3;
-      border-radius: 50%;
-      animation: spin 0.6s linear infinite;
-      vertical-align: middle;
+      display: inline-block; width: 10px; height: 10px;
+      border: 1.5px solid #333; border-top: 1.5px solid #737373;
+      border-radius: 50%; animation: spin 0.5s linear infinite; vertical-align: middle;
     }
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
-    }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Config output */
     .config-output {
       background: #0a0a0a;
-      border: 1px solid #262626;
-      border-radius: 8px;
+      border: 1px solid #1a1a1a;
+      border-radius: 4px;
       padding: 16px;
       font-family: 'SF Mono', 'Monaco', monospace;
       font-size: 12px;
-      line-height: 1.6;
-      color: #d4d4d4;
+      line-height: 1.7;
       overflow: auto;
       flex: 1;
       position: relative;
     }
     .config-output pre { margin: 0; white-space: pre-wrap; }
+    /* JSON syntax highlighting */
+    .json-key { color: #93c5fd; }
+    .json-string { color: #86efac; }
+    .json-number { color: #fbbf24; }
+    .json-bool { color: #f472b6; }
+    .json-null { color: #737373; }
+    .json-bracket { color: #525252; }
+
     .copy-btn {
-      position: absolute;
-      top: 8px;
-      right: 8px;
-      padding: 4px 10px;
-      background: #262626;
-      color: #a3a3a3;
-      border: 1px solid #404040;
-      border-radius: 4px;
-      font-size: 11px;
-      cursor: pointer;
-      font-family: inherit;
-      width: auto;
+      position: absolute; top: 8px; right: 8px;
+      padding: 3px 10px; background: #1a1a1a; color: #737373;
+      border: 1px solid #262626; border-radius: 3px;
+      font-size: 11px; cursor: pointer; font-family: inherit; width: auto;
     }
-    .copy-btn:hover { background: #333; color: #fafafa; }
-
-    .empty-state {
-      color: #404040;
-      font-size: 13px;
-      text-align: center;
-      padding: 40px 20px;
-    }
-    .badge {
-      display: inline-block;
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 11px;
-      font-weight: 500;
-    }
-    .badge-success { background: rgba(22,101,52,0.2); color: #4ade80; }
-    .badge-fail { background: rgba(127,29,29,0.15); color: #ef4444; }
-
+    .copy-btn:hover { background: #262626; color: #fafafa; }
+    .empty-state { color: #333; font-size: 13px; text-align: center; padding: 40px 20px; }
     .summary {
-      padding: 12px;
-      border-radius: 6px;
-      font-size: 12px;
-      margin-bottom: 16px;
-      border: 1px solid #262626;
-      background: #0a0a0a;
-      color: #a3a3a3;
+      padding: 10px 12px; border-radius: 4px; font-size: 12px;
+      margin-bottom: 12px; border: 1px solid #1a1a1a; background: #0a0a0a; color: #737373;
+      flex-shrink: 0;
     }
-    .summary strong { color: #fafafa; }
-
-    @media (max-width: 700px) {
-      .layout {
-        grid-template-columns: 1fr;
-      }
-    }
+    .summary strong { color: #e5e5e5; }
+    @media (max-width: 700px) { .layout { grid-template-columns: 1fr; } }
   </style>
 </head>
 <body>
-  <div style="padding: 12px 20px; border-bottom: 1px solid #262626; display: flex; align-items: baseline; gap: 12px;">
-    <h1>OpenClaw API Detector</h1>
-    <p class="subtitle" style="margin-bottom:0">输入 Base URL 和 API Key，自动检测协议类型，生成 OpenClaw 配置</p>
+  <div class="header">
+    <h1>🦞 OpenClaw Config</h1>
+    <span class="subtitle">Detect API protocol · Generate config · 30 seconds</span>
   </div>
 
   <div class="layout">
-    <!-- Column 1: Input + Results -->
     <div class="panel">
-      <div class="panel-title">输入</div>
+      <div class="panel-title">Configure</div>
       <form id="detectForm">
         <div class="input-group">
-          <label>Provider Name（自定义名称，如供应商名字）</label>
+          <label>Provider Name（自定义，如供应商名字）</label>
           <input type="text" id="providerName" placeholder="my-provider" required>
         </div>
         <div class="input-group">
@@ -242,25 +181,23 @@
         </div>
         <button type="submit" id="detectBtn">开始检测</button>
       </form>
-      <div style="margin-top:16px;flex:1;display:flex;flex-direction:column;overflow-y:auto">
-        <div class="panel-title">检测结果</div>
+      <div style="margin-top:14px;flex:1;display:flex;flex-direction:column;min-height:0">
+        <div class="panel-title">Detection</div>
         <div id="testResults" style="flex:1;overflow-y:auto">
-          <div class="empty-state">输入配置后点击开始检测</div>
+          <div class="empty-state">填入配置后点击检测</div>
         </div>
       </div>
     </div>
 
-    <!-- Column 3: Final config -->
     <div class="panel">
-      <div class="panel-title">生成配置</div>
-      <div id="configPanel" style="display:flex;flex-direction:column;height:100%">>
-        <div class="empty-state">检测通过后自动生成</div>
+      <div class="panel-title">Output — openclaw.json</div>
+      <div id="configPanel" style="display:flex;flex-direction:column;flex:1;min-height:0">
+        <div class="empty-state">检测通过后自动生成配置</div>
       </div>
     </div>
   </div>
 
   <script>
-    // localStorage
     window.addEventListener('DOMContentLoaded', () => {
       ['providerName','baseUrl','apiKey','testModel'].forEach(f => {
         const v = localStorage.getItem(f)
@@ -275,180 +212,130 @@
     }
 
     const TEST_CONFIGS = [
-      {
-        name: 'Anthropic Messages',
-        detail: '/v1/messages + x-api-key',
-        api: 'anthropic-messages',
-        path: '/v1/messages',
-        headers: (key) => ({ 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' }),
-        bodyTemplate: (m) => ({ model: m || 'claude-3-5-sonnet-20241022', max_tokens: 10, messages: [{ role: 'user', content: 'hi' }] }),
+      { name: 'Anthropic Messages', detail: '/v1/messages · x-api-key', api: 'anthropic-messages', path: '/v1/messages',
+        headers: k => ({ 'x-api-key': k, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' }),
+        bodyTemplate: m => ({ model: m || 'claude-3-5-sonnet-20241022', max_tokens: 10, messages: [{ role: 'user', content: 'hi' }] }),
         suggestedModels: [
           { id: 'claude-opus-4-6', name: 'Claude Opus 4.6', reasoning: false, input: ['text','image'], cost: { input: 15, output: 75, cacheRead: 1.5, cacheWrite: 18.75 }, contextWindow: 200000, maxTokens: 8192 },
           { id: 'claude-sonnet-4-6', name: 'Claude Sonnet 4.6', reasoning: false, input: ['text','image'], cost: { input: 3, output: 15, cacheRead: 0.3, cacheWrite: 3.75 }, contextWindow: 200000, maxTokens: 8192 }
-        ]
-      },
-      {
-        name: 'OpenAI Completions',
-        detail: '/v1/chat/completions + Bearer',
-        api: 'openai-completions',
-        path: '/v1/chat/completions',
-        headers: (key) => ({ 'authorization': `Bearer ${key}`, 'content-type': 'application/json' }),
-        bodyTemplate: (m) => ({ model: m || 'gpt-4', max_tokens: 10, messages: [{ role: 'user', content: 'hi' }] }),
+        ] },
+      { name: 'OpenAI Completions', detail: '/v1/chat/completions · Bearer', api: 'openai-completions', path: '/v1/chat/completions',
+        headers: k => ({ 'authorization': `Bearer ${k}`, 'content-type': 'application/json' }),
+        bodyTemplate: m => ({ model: m || 'gpt-4', max_tokens: 10, messages: [{ role: 'user', content: 'hi' }] }),
         authHeader: true,
         suggestedModels: [
           { id: 'gpt-5.2', name: 'GPT-5.2', reasoning: false, input: ['text','image'], cost: { input: 2.5, output: 10 }, contextWindow: 128000, maxTokens: 16384 },
           { id: 'gpt-4', name: 'GPT-4', reasoning: false, input: ['text'], cost: { input: 30, output: 60 }, contextWindow: 128000, maxTokens: 4096 }
-        ]
-      },
-      {
-        name: 'OpenAI (No Auth)',
-        detail: '/v1/chat/completions 无认证头',
-        api: 'openai-completions',
-        path: '/v1/chat/completions',
+        ] },
+      { name: 'OpenAI (No Auth)', detail: '/v1/chat/completions · 无认证头', api: 'openai-completions', path: '/v1/chat/completions',
         headers: () => ({ 'content-type': 'application/json' }),
-        bodyTemplate: (m) => ({ model: m || 'gpt-4', max_tokens: 10, messages: [{ role: 'user', content: 'hi' }] }),
+        bodyTemplate: m => ({ model: m || 'gpt-4', max_tokens: 10, messages: [{ role: 'user', content: 'hi' }] }),
         authHeader: false,
-        suggestedModels: [
-          { id: 'gpt-5.2', name: 'GPT-5.2', reasoning: false, input: ['text','image'], contextWindow: 128000, maxTokens: 16384 }
-        ]
-      },
-      {
-        name: 'OpenAI Responses',
-        detail: '/v1/chat/completions + stream:false',
-        api: 'openai-responses',
-        path: '/v1/chat/completions',
-        headers: (key) => ({ 'authorization': `Bearer ${key}`, 'content-type': 'application/json' }),
-        bodyTemplate: (m) => ({ model: m || 'gpt-4', max_tokens: 10, stream: false, messages: [{ role: 'user', content: 'hi' }] }),
+        suggestedModels: [{ id: 'gpt-5.2', name: 'GPT-5.2', reasoning: false, input: ['text','image'], contextWindow: 128000, maxTokens: 16384 }] },
+      { name: 'OpenAI Responses', detail: '/v1/chat/completions · stream:false', api: 'openai-responses', path: '/v1/chat/completions',
+        headers: k => ({ 'authorization': `Bearer ${k}`, 'content-type': 'application/json' }),
+        bodyTemplate: m => ({ model: m || 'gpt-4', max_tokens: 10, stream: false, messages: [{ role: 'user', content: 'hi' }] }),
         authHeader: true,
-        suggestedModels: [
-          { id: 'gpt-5.1-codex', name: 'GPT-5.1 Codex', reasoning: true, input: ['text'], contextWindow: 200000, maxTokens: 8192 }
-        ]
-      },
-      {
-        name: 'Anthropic (/messages)',
-        detail: '/messages 无 /v1 前缀',
-        api: 'anthropic-messages',
-        path: '/messages',
-        headers: (key) => ({ 'x-api-key': key, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' }),
-        bodyTemplate: (m) => ({ model: m || 'claude-3-5-sonnet-20241022', max_tokens: 10, messages: [{ role: 'user', content: 'hi' }] }),
-        suggestedModels: [
-          { id: 'claude-opus-4-6', name: 'Claude Opus 4.6', reasoning: false, input: ['text','image'], contextWindow: 200000, maxTokens: 8192 }
-        ]
-      },
-      {
-        name: 'OpenAI (/chat/completions)',
-        detail: '/chat/completions 无 /v1 前缀',
-        api: 'openai-completions',
-        path: '/chat/completions',
-        headers: (key) => ({ 'authorization': `Bearer ${key}`, 'content-type': 'application/json' }),
-        bodyTemplate: (m) => ({ model: m || 'gpt-4', max_tokens: 10, messages: [{ role: 'user', content: 'hi' }] }),
+        suggestedModels: [{ id: 'gpt-5.1-codex', name: 'GPT-5.1 Codex', reasoning: true, input: ['text'], contextWindow: 200000, maxTokens: 8192 }] },
+      { name: 'Anthropic (/messages)', detail: '/messages · 无 /v1', api: 'anthropic-messages', path: '/messages',
+        headers: k => ({ 'x-api-key': k, 'anthropic-version': '2023-06-01', 'content-type': 'application/json' }),
+        bodyTemplate: m => ({ model: m || 'claude-3-5-sonnet-20241022', max_tokens: 10, messages: [{ role: 'user', content: 'hi' }] }),
+        suggestedModels: [{ id: 'claude-opus-4-6', name: 'Claude Opus 4.6', reasoning: false, input: ['text','image'], contextWindow: 200000, maxTokens: 8192 }] },
+      { name: 'OpenAI (/chat/completions)', detail: '/chat/completions · 无 /v1', api: 'openai-completions', path: '/chat/completions',
+        headers: k => ({ 'authorization': `Bearer ${k}`, 'content-type': 'application/json' }),
+        bodyTemplate: m => ({ model: m || 'gpt-4', max_tokens: 10, messages: [{ role: 'user', content: 'hi' }] }),
         authHeader: true,
-        suggestedModels: [
-          { id: 'gpt-4', name: 'GPT-4', reasoning: false, input: ['text'], contextWindow: 128000, maxTokens: 4096 }
-        ]
-      }
+        suggestedModels: [{ id: 'gpt-4', name: 'GPT-4', reasoning: false, input: ['text'], contextWindow: 128000, maxTokens: 4096 }] }
     ]
 
-    // Render initial test items
     function renderInitialItems() {
-      const el = document.getElementById('testResults')
-      el.innerHTML = TEST_CONFIGS.map((c, i) => `
+      document.getElementById('testResults').innerHTML = TEST_CONFIGS.map((c, i) => `
         <div class="test-item" id="test-${i}">
-          <div>
-            <span class="name">${c.name}</span><br>
-            <span style="color:#525252;font-size:11px">${c.detail}</span>
-          </div>
+          <div><span class="name">${c.name}</span><br><span style="color:#333;font-size:11px">${c.detail}</span></div>
           <span class="status">—</span>
-        </div>
-      `).join('')
+        </div>`).join('')
     }
 
-    async function testOne(baseUrl, apiKey, config, testModel) {
+    async function testOne(baseUrl, apiKey, config, testModel, signal) {
       const headers = config.headers(apiKey)
       const body = config.bodyTemplate(testModel)
+      const t0 = performance.now()
       try {
         const res = await fetch('/api/test', {
           method: 'POST',
           headers: { 'content-type': 'application/json' },
-          body: JSON.stringify({ baseUrl, apiKey, api: config.api, path: config.path, headers, body })
+          body: JSON.stringify({ baseUrl, apiKey, api: config.api, path: config.path, headers, body }),
+          signal
         })
         const r = await res.json()
-        return { success: r.success, statusCode: r.statusCode, body: r.body, error: r.error }
+        const latency = Math.round(performance.now() - t0)
+        return { success: r.success, statusCode: r.statusCode, body: r.body, error: r.error, latency }
       } catch (e) {
-        return { success: false, error: e.message }
+        if (e.name === 'AbortError') return { success: false, error: 'cancelled', cancelled: true }
+        return { success: false, error: e.message, latency: Math.round(performance.now() - t0) }
       }
     }
 
     // State
     let allTestResults = []
     let selectedIndex = -1
+    let currentAbortController = null
 
     function selectResult(idx) {
       if (!allTestResults[idx] || !allTestResults[idx].success) return
       selectedIndex = idx
-      // Update selection UI
-      document.querySelectorAll('.test-item.success').forEach(el => el.classList.remove('selected'))
-      const el = document.getElementById(`test-${idx}`)
-      if (el) el.classList.add('selected')
-      // Update config panel
+      document.querySelectorAll('.test-item').forEach(el => el.classList.remove('selected'))
+      document.getElementById(`test-${idx}`)?.classList.add('selected')
       renderConfig(idx)
+    }
+
+    function highlightJson(json) {
+      return json
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/"([^"]+)"(?=\s*:)/g, '<span class="json-key">"$1"</span>')
+        .replace(/:\s*"([^"]*)"/g, ': <span class="json-string">"$1"</span>')
+        .replace(/:\s*(\d+\.?\d*)/g, ': <span class="json-number">$1</span>')
+        .replace(/:\s*(true|false)/g, ': <span class="json-bool">$1</span>')
+        .replace(/:\s*(null)/g, ': <span class="json-null">$1</span>')
+        .replace(/[{}\[\]]/g, '<span class="json-bracket">$&</span>')
     }
 
     function renderConfig(idx) {
       const panel = document.getElementById('configPanel')
       const r = allTestResults[idx]
-      if (!r || !r.success) {
-        panel.innerHTML = '<div class="empty-state">选择一个成功的检测结果</div>'
-        return
-      }
+      if (!r || !r.success) { panel.innerHTML = '<div class="empty-state">选择一个成功的检测结果</div>'; return }
       const providerName = document.getElementById('providerName').value.trim()
       const baseUrl = document.getElementById('baseUrl').value.trim().replace(/\/+$/, '')
       const apiKey = document.getElementById('apiKey').value.trim()
       const c = r.config
       const providerConfig = { baseUrl, apiKey, api: c.api }
       if (c.authHeader === false) providerConfig.authHeader = false
-      if (c.suggestedModels && c.suggestedModels.length) {
-        providerConfig.models = c.suggestedModels
-      }
-
-      // First model as default
+      if (c.suggestedModels?.length) providerConfig.models = c.suggestedModels
       const firstModelId = c.suggestedModels?.[0]?.id
       const primaryModel = firstModelId ? `${providerName}/${firstModelId}` : null
-
-      const finalConfig = {
-        models: {
-          providers: {
-            [providerName]: providerConfig
-          }
-        }
-      }
+      const finalConfig = { models: { providers: { [providerName]: providerConfig } } }
       if (primaryModel) {
-        finalConfig.agents = {
-          defaults: {
-            model: {
-              primary: primaryModel,
-              fallbacks: c.suggestedModels.slice(1).map(m => `${providerName}/${m.id}`)
-            }
-          }
-        }
+        finalConfig.agents = { defaults: { model: { primary: primaryModel, fallbacks: c.suggestedModels.slice(1).map(m => `${providerName}/${m.id}`) } } }
       }
-
       const json = JSON.stringify(finalConfig, null, 2)
       panel.innerHTML = `
         <div class="summary">
-          检测到 <strong>${c.name}</strong> 协议<br>
-          路径: <strong>${c.path}</strong>${primaryModel ? `<br>默认模型: <strong>${primaryModel}</strong>` : ''}
+          <strong>${c.name}</strong> · ${c.path} · ${r.latency}ms${primaryModel ? ` · ${primaryModel}` : ''}
         </div>
         <div class="config-output">
           <button class="copy-btn" onclick="copyConfig()">复制</button>
-          <pre id="configJson">${escapeHtml(json)}</pre>
-        </div>
-      `
+          <pre id="configJson">${highlightJson(json)}</pre>
+        </div>`
     }
 
     document.getElementById('detectForm').addEventListener('submit', async (e) => {
       e.preventDefault()
       saveLS()
+
+      // Cancel previous run
+      if (currentAbortController) currentAbortController.abort()
+      currentAbortController = new AbortController()
+      const signal = currentAbortController.signal
 
       const providerName = document.getElementById('providerName').value.trim()
       const baseUrl = document.getElementById('baseUrl').value.trim().replace(/\/+$/, '')
@@ -456,61 +343,55 @@
       const testModel = document.getElementById('testModel').value.trim()
       const btn = document.getElementById('detectBtn')
 
-      btn.disabled = true
       btn.textContent = '检测中...'
       allTestResults = []
       selectedIndex = -1
       renderInitialItems()
       document.getElementById('configPanel').innerHTML = '<div class="empty-state">检测中...</div>'
 
-      // Set all to testing
       TEST_CONFIGS.forEach((_, i) => {
         const el = document.getElementById(`test-${i}`)
         el.className = 'test-item testing'
-        el.querySelector('.status').innerHTML = '<span class="spinner-inline"></span> testing'
+        el.querySelector('.status').innerHTML = '<span class="spinner-inline"></span>'
       })
 
-      // Fire all concurrently
       const promises = TEST_CONFIGS.map((config, i) =>
-        testOne(baseUrl, apiKey, config, testModel).then(result => {
+        testOne(baseUrl, apiKey, config, testModel, signal).then(result => {
           allTestResults[i] = { ...result, config }
           const el = document.getElementById(`test-${i}`)
-          if (result.success) {
+          if (result.cancelled) {
+            el.className = 'test-item cancelled'
+            el.querySelector('.status').textContent = 'cancelled'
+          } else if (result.success) {
             el.className = 'test-item success'
-            el.querySelector('.status').textContent = `✓ ${result.statusCode}`
+            el.querySelector('.status').textContent = `✓ ${result.statusCode} · ${result.latency}ms`
             el.onclick = () => selectResult(i)
           } else {
             el.className = 'test-item fail'
-            const errText = result.error || `${result.statusCode || 'err'}`
-            el.querySelector('.status').textContent = `✗ ${errText.slice(0, 30)}`
+            el.querySelector('.status').textContent = `✗ ${(result.error || result.statusCode || 'err').toString().slice(0, 25)}`
           }
         })
       )
 
       await Promise.all(promises)
 
-      // Auto-select first success
+      if (signal.aborted) return
+
       const firstSuccessIdx = allTestResults.findIndex(r => r && r.success)
       if (firstSuccessIdx !== -1) {
         selectResult(firstSuccessIdx)
       } else {
-        document.getElementById('configPanel').innerHTML = '<div class="empty-state" style="color:#ef4444;">全部失败，请检查 Base URL 和 API Key</div>'
+        document.getElementById('configPanel').innerHTML = '<div class="empty-state" style="color:#ef4444;">全部失败 — 检查 Base URL 和 API Key</div>'
       }
-
-      btn.disabled = false
       btn.textContent = '开始检测'
     })
 
-    function escapeHtml(s) {
-      return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
-    }
-
     function copyConfig() {
-      const text = document.getElementById('configJson').textContent
-      navigator.clipboard.writeText(text).then(() => {
+      const el = document.getElementById('configJson')
+      navigator.clipboard.writeText(el.textContent).then(() => {
         const btn = document.querySelector('.copy-btn')
-        btn.textContent = '✓ 已复制'
-        setTimeout(() => btn.textContent = '复制', 2000)
+        btn.textContent = '✓ copied'
+        setTimeout(() => btn.textContent = '复制', 1500)
       })
     }
   </script>
