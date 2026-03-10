@@ -22,7 +22,7 @@ openclaw skill install momomo-agent/api-config-detector
 ## Usage (Agent/CLI)
 
 ```bash
-node scripts/detect.js <baseUrl> <apiKey> [testModel] [providerName]
+node scripts/detect.cjs <baseUrl> <apiKey> [testModel] [providerName]
 ```
 
 **Arguments:**
@@ -37,7 +37,7 @@ node scripts/detect.js <baseUrl> <apiKey> [testModel] [providerName]
 ## Example
 
 ```bash
-node scripts/detect.js https://api.anthropic.com sk-ant-xxx claude-sonnet-4-6 anthropic
+node scripts/detect.cjs https://api.anthropic.com sk-ant-xxx claude-sonnet-4-6 anthropic
 ```
 
 Output:

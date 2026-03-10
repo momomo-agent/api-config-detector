@@ -10,7 +10,7 @@ Detect which protocol an API provider supports, generate a ready-to-use `opencla
 ## Usage
 
 ```bash
-node scripts/detect.js <baseUrl> <apiKey> [testModel] [providerName]
+node scripts/detect.cjs <baseUrl> <apiKey> [testModel] [providerName]
 ```
 
 - `baseUrl` — API endpoint (e.g. `https://api.anthropic.com`)
