@@ -56,7 +56,7 @@ export default async function handler(req) {
     const best = pickBest(results, testModel)
     
     if (!best) {
-      return new Response(JSON.stringify({ error: 'No working protocol found', results }), { status: 200, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+      return new Response(JSON.stringify({ error: 'No working protocol found', results: results.map(r => ({ id: r.protocol.id, success: r.success, error: r.error, latency: r.latency })) }), { status: 200, headers: { ...corsHeaders, 'content-type': 'application/json' } })
     }
     
     const p = best.protocol
@@ -70,7 +70,19 @@ export default async function handler(req) {
       agents: { defaults: { model: `${providerName || 'custom'}/${modelId}` } }
     }
     
-    return new Response(JSON.stringify({ config, protocol: p.id, latency: best.latency }), { status: 200, headers: { ...corsHeaders, 'content-type': 'application/json' } })
+    return new Response(JSON.stringify({ 
+      config, 
+      protocol: p.id, 
+      latency: best.latency,
+      allResults: results.map(r => ({ 
+        id: r.protocol.id, 
+        name: r.protocol.id.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()),
+        success: r.success, 
+        error: r.error, 
+        statusCode: r.statusCode,
+        latency: r.latency 
+      }))
+    }), { status: 200, headers: { ...corsHeaders, 'content-type': 'application/json' } })
   } catch (error) {
     return new Response(JSON.stringify({ error: error.message }), { status: 500, headers: { ...corsHeaders, 'content-type': 'application/json' } })
   }

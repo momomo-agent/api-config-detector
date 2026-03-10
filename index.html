@@ -357,6 +357,51 @@
       color: #a78bfa;
     }
     
+    .all-results {
+      margin-bottom: 20px;
+    }
+    
+    .result-item {
+      padding: 12px;
+      margin-bottom: 8px;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .result-item:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(139, 92, 246, 0.3);
+    }
+    
+    .result-item.selected {
+      border-color: #8b5cf6;
+      background: rgba(139, 92, 246, 0.1);
+    }
+    
+    .result-item.success .status {
+      color: #10b981;
+    }
+    
+    .result-item.failed .status {
+      color: #ef4444;
+    }
+    
+    .result-item .name {
+      flex: 1;
+    }
+    
+    .result-item .latency {
+      color: #94a3b8;
+      margin-left: 12px;
+    }
+    
     @media (max-width: 768px) {
       .step { flex-direction: column; }
     }
@@ -404,8 +449,8 @@
         <button type="submit" class="detect-btn">开始检测</button>
       </form>
       <div id="result" class="result-box" style="display:none;">
-        <div id="testingInfo" class="testing-info"></div>
         <h3>检测结果</h3>
+        <div id="allResults" class="all-results"></div>
         <div class="result-summary">
           <span id="protocolName"></span>
           <span id="latencyInfo"></span>
@@ -509,6 +554,9 @@ node detect.js https://api.anthropic.com sk-ant-xxx --json</code></div>
   </footer>
   
   <script>
+    let allResultsData = [];
+    let currentConfig = null;
+    
     document.getElementById('detectForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const btn = e.target.querySelector('button');
@@ -534,8 +582,20 @@ node detect.js https://api.anthropic.com sk-ant-xxx --json</code></div>
         if (data.error) {
           alert('检测失败: ' + data.error);
         } else {
-          document.getElementById('testingInfo').textContent = `✓ 测试了 5 种协议变体`;
-          document.getElementById('protocolName').textContent = `协议: ${data.protocol}`;
+          allResultsData = data.allResults;
+          currentConfig = data.config;
+          
+          // 显示所有测试结果
+          const resultsHtml = data.allResults.map((r, i) => `
+            <div class="result-item ${r.success ? 'success' : 'failed'} ${i === 0 ? 'selected' : ''}" onclick="selectResult(${i})">
+              <span class="name">${r.name}</span>
+              <span class="status">${r.success ? '✓ ' + r.statusCode : '✗ ' + (r.error || r.statusCode || 'failed')}</span>
+              <span class="latency">${r.latency}ms</span>
+            </div>
+          `).join('');
+          
+          document.getElementById('allResults').innerHTML = resultsHtml;
+          document.getElementById('protocolName').textContent = `最佳协议: ${data.protocol}`;
           document.getElementById('latencyInfo').textContent = `延迟: ${data.latency}ms`;
           document.getElementById('resultContent').textContent = JSON.stringify(data.config, null, 2);
           document.getElementById('result').style.display = 'block';
@@ -548,6 +608,18 @@ node detect.js https://api.anthropic.com sk-ant-xxx --json</code></div>
         btn.disabled = false;
       }
     });
+    
+    function selectResult(index) {
+      document.querySelectorAll('.result-item').forEach((el, i) => {
+        el.classList.toggle('selected', i === index);
+      });
+      
+      const result = allResultsData[index];
+      document.getElementById('protocolName').textContent = `协议: ${result.name}`;
+      document.getElementById('latencyInfo').textContent = result.success 
+        ? `延迟: ${result.latency}ms` 
+        : `失败: ${result.error || result.statusCode}`;
+    }
     
     function copyResult() {
       const text = document.getElementById('resultContent').textContent;
