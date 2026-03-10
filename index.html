@@ -337,6 +337,26 @@
       margin-top: 0;
     }
     
+    .testing-info {
+      margin-bottom: 20px;
+      padding: 12px;
+      background: rgba(139, 92, 246, 0.1);
+      border-radius: 8px;
+      font-size: 14px;
+      color: #94a3b8;
+    }
+    
+    .result-summary {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      font-size: 14px;
+    }
+    
+    .result-summary span {
+      color: #a78bfa;
+    }
+    
     @media (max-width: 768px) {
       .step { flex-direction: column; }
     }
@@ -384,7 +404,12 @@
         <button type="submit" class="detect-btn">开始检测</button>
       </form>
       <div id="result" class="result-box" style="display:none;">
+        <div id="testingInfo" class="testing-info"></div>
         <h3>检测结果</h3>
+        <div class="result-summary">
+          <span id="protocolName"></span>
+          <span id="latencyInfo"></span>
+        </div>
         <pre id="resultContent"></pre>
         <button onclick="copyResult()" class="copy-btn">复制配置</button>
       </div>
@@ -495,6 +520,8 @@ node detect.js https://api.anthropic.com sk-ant-xxx --json</code></div>
       const testModel = document.getElementById('testModel').value;
       const providerName = document.getElementById('providerName').value || 'custom';
       
+      document.getElementById('result').style.display = 'none';
+      
       try {
         const res = await fetch('/api/detect', {
           method: 'POST',
@@ -507,6 +534,9 @@ node detect.js https://api.anthropic.com sk-ant-xxx --json</code></div>
         if (data.error) {
           alert('检测失败: ' + data.error);
         } else {
+          document.getElementById('testingInfo').textContent = `✓ 测试了 5 种协议变体`;
+          document.getElementById('protocolName').textContent = `协议: ${data.protocol}`;
+          document.getElementById('latencyInfo').textContent = `延迟: ${data.latency}ms`;
           document.getElementById('resultContent').textContent = JSON.stringify(data.config, null, 2);
           document.getElementById('result').style.display = 'block';
           document.getElementById('result').scrollIntoView({ behavior: 'smooth' });
