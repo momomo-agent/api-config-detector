@@ -25,6 +25,29 @@
       z-index: 100;
     }
     
+    .agent-banner {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2));
+      border-bottom: 1px solid rgba(139, 92, 246, 0.3);
+      padding: 12px 20px;
+      text-align: center;
+      font-size: 14px;
+      position: relative;
+      z-index: 101;
+    }
+    
+    .agent-banner a {
+      color: #a78bfa;
+      text-decoration: none;
+      font-weight: 600;
+      border-bottom: 1px solid rgba(167, 139, 250, 0.3);
+      transition: all 0.2s;
+    }
+    
+    .agent-banner a:hover {
+      color: #c4b5fd;
+      border-bottom-color: #c4b5fd;
+    }
+    
     .hero {
       min-height: 100vh;
       display: flex;
@@ -231,6 +254,9 @@
   </style>
 </head>
 <body>
+  <div class="agent-banner">
+    🤖 OpenClaw Agent? Install directly: <a href="https://github.com/momomo-agent/api-config-detector" target="_blank">openclaw skill install momomo-agent/api-config-detector</a>
+  </div>
   <div class="grain"></div>
   
   <section class="hero">
