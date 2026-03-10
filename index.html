@@ -586,8 +586,9 @@ node detect.js https://api.anthropic.com sk-ant-xxx --json</code></div>
           currentConfig = data.config;
           
           // 显示所有测试结果
+          const bestIndex = data.allResults.findIndex(r => r.id === data.protocol);
           const resultsHtml = data.allResults.map((r, i) => `
-            <div class="result-item ${r.success ? 'success' : 'failed'} ${i === 0 ? 'selected' : ''}" onclick="selectResult(${i})">
+            <div class="result-item ${r.success ? 'success' : 'failed'} ${i === bestIndex ? 'selected' : ''}" ${r.success ? `onclick="selectResult(${i})"` : 'style="cursor: not-allowed; opacity: 0.5;"'}>
               <span class="name">${r.name}</span>
               <span class="status">${r.success ? '✓ ' + r.statusCode : '✗ ' + (r.error || r.statusCode || 'failed')}</span>
               <span class="latency">${r.latency}ms</span>
