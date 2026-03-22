@@ -2,24 +2,38 @@ export default {
   async fetch(request) {
     const url = new URL(request.url)
     
+    // CORS preflight — any path
+    if (request.method === 'OPTIONS') {
+      return new Response(null, {
+        status: 204,
+        headers: {
+          'Access-Control-Allow-Origin': '*',
+          'Access-Control-Allow-Methods': 'GET, POST, PUT, DELETE, PATCH, OPTIONS',
+          'Access-Control-Allow-Headers': '*',
+          'Access-Control-Max-Age': '86400',
+        }
+      })
+    }
+    
     // API 配置检测（保留原功能）
     if (url.pathname === '/api/test') {
       return handleApiTest(request)
     }
     
-    // 通用代理
-    if (url.pathname === '/proxy') {
+    // POST to ANY path → 通用代理 (works on /, /proxy, anything)
+    if (request.method === 'POST') {
+      return handleProxy(request)
+    }
+    
+    // GET with ?url= → 通用代理 (works on /, /proxy, anything)
+    if (url.searchParams.get('url')) {
       return handleProxy(request)
     }
     
     // 返回使用说明
-    if (url.pathname === '/' || url.pathname === '/index.html') {
-      return new Response(getUsageHTML(), {
-        headers: { 'content-type': 'text/html;charset=UTF-8' }
-      })
-    }
-    
-    return new Response('Not Found', { status: 404 })
+    return new Response(getUsageHTML(), {
+      headers: { 'content-type': 'text/html;charset=UTF-8' }
+    })
   }
 }
 
@@ -72,6 +86,20 @@ async function handleProxy(request) {
     }
     
     const response = await fetch(targetUrl, fetchOptions)
+    const contentType = response.headers.get('content-type') || ''
+    
+    // Stream mode or SSE: transparent passthrough
+    if (mode === 'stream' || contentType.includes('text/event-stream')) {
+      const headers = new Headers()
+      for (const [k, v] of response.headers.entries()) {
+        if (['transfer-encoding', 'connection', 'keep-alive'].includes(k.toLowerCase())) continue
+        headers.set(k, v)
+      }
+      headers.set('Access-Control-Allow-Origin', '*')
+      headers.set('Access-Control-Allow-Headers', '*')
+      return new Response(response.body, { status: response.status, headers })
+    }
+    
     const text = await response.text()
     
     // LLM 友好模式：提取 HTML 正文
